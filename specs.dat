@@ -1,0 +1,15 @@
+                                        ERROR:
+special		STMS_BDS_0040		if present in STMS_INVC_0120 and substr SERVICE_CODE = 'F'[13]
+special		STMS_INVC_0140 		if present in STMS_INVC_0110 and PREV_BALANCE > 0 [19]
+special		STMS_INVC_0160 		if present in STMS_INVC_0110 and TAX_AMOUNT > 0   [21]
+
+non present	RIO_BBNMS_0040		if NOT present in STMS_BBNMS_0040
+not present	EDW_CUST_0010 		if NOT present in STMS_CUST_0010 
+not present	RIO_UDAS_0010 		if NOT present in RIO_MEMO_0400 
+non present	RIO_BBNMS_0030 		if NOT present in STMS_BBNMS_0030
+
+present		EDW_BBNMS_0010		if present in EDW_CUST_0010 and EDW_UDAS_0100
+present		RIO_MEMO_0400 		if present in RIO_MEMO_0410
+present		EDW_UDAS_0100 		if present in EDW_CUST_0010 and EDW_BBNMS_0010
+present		TAOS_CUST_0070 		if present in TAOS_CUST_0075
+present		TAOS_CUST_0075 		if present in TAOS_CUST_0070

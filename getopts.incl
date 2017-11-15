@@ -1,0 +1,166 @@
+#! /bin/bash
+
+source use_color.incl
+
+while getopts csntm:f:d:v:p:i:E THE_ARGS ; do
+  case $THE_ARGS in
+      c)  CORE=1;;
+      n)  NONCORE=1;;
+      s)  SOURCE=1;;
+      t)  TARGET=1;;
+      m)  MOCK=$OPTARG;;
+      f)  FILE=$OPTARG;;
+      d)  YYYYMMDD=$OPTARG;;
+      v)  VALUE=$OPTARG;;
+      p)  PARAM=$OPTARG;;
+      i)  ITERATIONS=$OPTARG;;
+      E)  ETRACS=1;;
+      h)  printf "Usage: %s\n" $0
+          printf "     [ -c             core      one entry is mandaroy if indicated ]\n"
+          printf "     [ -n             noncore       other entries are optional     ]\n"
+          printf "     [ -s             source                                       ]\n"
+          printf "     [ -t             target                                       ]\n"
+          printf "                                                                    \n"
+          printf "     [ -d YYYYMMDD    date          mandatory if indicated                          ]\n"
+          printf "     [ -m P1M6        mock          mandatory if indicated                          ]\n"
+          printf "     [ -f filename    file          mandatory if indicated                          ]\n"
+          printf "     [ -v <integer>   value         mandatroy if indicated                          ]\n"
+          printf "     [ -i <iterations value         mandatroy if indicated                          ]\n"
+          printf "     [ -p <parameter> search term   optional: will default to *.INP if ommited      ]\n"
+          printf "     [ -E             ETRACS only   optional: will default to non ETRACS if ommited ]\n"
+          printf "                                                                                     \n"
+          printf "     [ -h             Help    ]\n"
+           exit ;;
+      ?)  printf "Usage: %s\n" $0
+          printf "     [ -c             core      one entry is mandaroy if indicated ]\n"
+          printf "     [ -n             noncore       other entries are optional     ]\n"
+          printf "     [ -s             source                                       ]\n"
+          printf "     [ -t             target                                       ]\n"
+          printf "                                                                    \n"
+          printf "     [ -d YYYYMMDD    date          mandatory if indicated                          ]\n"
+          printf "     [ -m P1M6        mock          mandatory if indicated                          ]\n"
+          printf "     [ -f filename    file          mandatory if indicated                          ]\n"
+          printf "     [ -v <integer>   value         mandatroy if indicated                          ]\n"
+          printf "     [ -i <iterations value         mandatroy if indicated                          ]\n"
+          printf "     [ -p <parameter> search term   optional: will default to *.INP if ommited      ]\n"
+          printf "     [ -E             ETRACS only   optional: will default to non ETRACS if ommited ]\n"
+          printf "                                                                                     \n"
+          printf "     [ -h             Help    ]\n"
+           exit ;;
+  esac
+done
+
+  FILETYPE=()  
+  [[ $CORE ]] && FILETYPE+=("core")
+  [[ $NONCORE ]] && FILETYPE+=("noncore")
+  [[ $SOURCE ]] && FILETYPE+=("source")
+  [[ $TARGET ]] && FILETYPE+=("core" "noncore")
+
+DIR=`pwd`
+  
+###############################################################################################################################
+
+getopts_valid_values () {
+   getopts_prog=$1;shift
+   getopts_err=''
+   getopts_fnd=''
+   getopts_bad_date=''
+   getopts_c_fnd=''
+   getopts_n_fnd=''
+   getopts_s_fnd=''
+   getopts_t_fnd=''
+   getopts_d_fnd=''
+   getopts_m_fnd=''
+   getopts_f_fnd=''
+   getopts_v_fnd=''
+   getopts_p_fnd=''
+   getopts_i_fnd=''
+   getopts_E_fnd=''
+   getopts_fnd_mand=''
+   for i in $@;do
+      [[ $i == '-c' || $i == '-n' || $i == '-t' || $i == '-s' ]] && getopts_fnd_mand=1
+      [[ $i == '-c' ]] && getopts_c_fnd=1 
+      [[ $i == '-n' ]] && getopts_n_fnd=1 
+      [[ $i == '-s' ]] && getopts_s_fnd=1 
+      [[ $i == '-t' ]] && getopts_t_fnd=1 
+      [[ $i == '-d' ]] && getopts_d_fnd=1 
+      [[ $i == '-f' ]] && getopts_f_fnd=1 
+      [[ $i == '-m' ]] && getopts_m_fnd=1 
+      [[ $i == '-v' ]] && getopts_v_fnd=1 
+      [[ $i == '-p' ]] && getopts_p_fnd=1 
+      [[ $i == '-i' ]] && getopts_i_fnd=1 
+      [[ $i == '-E' ]] && getopts_E_fnd=1 
+
+      [[ $i == '-d' ]] && [[ ! $YYYYMMDD ]]   &&  getopts_err=1
+      [[ $i == '-m' ]] && [[ ! $MOCK ]]       &&  getopts_err=1
+      [[ $i == '-f' ]] && [[ ! $FILE ]]       &&  getopts_err=1
+   done
+
+   [[ $getopts_c_fnd ]] && [[ $CORE ]]    && getopts_fnd=1 && getopts_c_chk=1
+   [[ $getopts_n_fnd ]] && [[ $NONCORE ]] && getopts_fnd=1 && getopts_n_chk=1
+   [[ $getopts_t_fnd ]] && [[ $TARGET ]]  && getopts_fnd=1 && getopts_t_chk=1
+   [[ $getopts_s_fnd ]] && [[ $SOURCE ]]  && getopts_fnd=1
+   [[ ! $getopts_c_fnd ]] && [[ $CORE ]]    && getopts_err=1
+   [[ ! $getopts_n_fnd ]] && [[ $NONCORE ]] && getopts_err=1
+   [[ ! $getopts_s_fnd ]] && [[ $SOURCE ]]  && getopts_err=1
+   [[ ! $getopts_t_fnd ]] && [[ $TARGET ]]  && getopts_err=1
+
+   if [[ $getopts_d_fnd && $YYYYMMDD ]];then
+      date -d $YYYYMMDD "+%Y%m%d" > /dev/null 2>&1
+      if [[ $? -gt 0 ]];then
+	 getopts_bad_date=1
+	 getopts_err=1
+      fi    
+   fi    
+
+   getopts_mocks=`ls -1 $DIR/data/accounts/*.dat | sed 's/^.*_//' | sed 's/.dat//' | sort -u | tr '\n' ' '`
+   [[ $getopts_t_chk && ($getopts_c_chk || $getopts_n_chk) ]] && getopts_err=1
+
+   if [[ ($getopts_fnd -eq 0  &&  $getopts_fnd_mand -eq 1) ||  $getopts_err -eq 1 ]];then
+      clear
+      echo ""
+      [[ $getopts_bad_date ]] && echo "     INVALID date $YYYYMMDD"
+      echo ""
+      echo " KEY:"
+      echo "      [ ... ]	Multiple entries allowed, but at least 1 is mandatory"
+      echo "      { ... }	One and only one value is allowed"
+      echo "      ( ... )	Entries are optional and will default if ommitted"
+      echo "             	Unbracketed entries are mandatory"
+      echo ""
+      echo " NOTE:"
+      echo "      -t can not be used in conjunction with -c or -n"
+      echo ""
+      echo ""
+      echo ""
+      echo -n -e "	Run program in this format 	===>	$yellow_on_red ./${getopts_prog}"
+      [[ $getopts_fnd_mand ]] && echo -n '[ '
+      [[ $getopts_c_fnd ]] && echo -n '-c '
+      [[ $getopts_n_fnd ]] && echo -n '-n '
+      [[ $getopts_s_fnd ]] && echo -n '-s '
+      [[ $getopts_t_fnd ]] && echo -n '-t '
+      [[ $getopts_fnd_mand ]] && echo -n ']'
+      [[ $getopts_m_fnd ]] && echo -n " -m{ $getopts_mocks}"
+      [[ $getopts_f_fnd ]] && echo -n ' -f file_name.INP'
+      [[ $getopts_d_fnd ]] && echo -n ' -d YYYYMMDD'
+      [[ $getopts_v_fnd ]] && echo -n ' ( -v <integer> )'
+      [[ $getopts_p_fnd ]] && echo -n ' ( -p <search_term> )'
+      [[ $getopts_i_fnd ]] && echo -n ' ( -i <iterations> )'
+      [[ $getopts_E_fnd ]] && echo -n ' ( -E )'
+      echo -e $_NC
+      echo ""
+      echo ""
+      echo ""
+      exit 
+   fi
+  
+
+}
+
+
+#  if [[ ${#FILETYPE[@]} -eq 0 ]];then
+#     echo "you must enter one of the 3 options: -c -n -s      (core, noncore, source)"
+#  fi
+
+#  for i in "${FILETYPE[@]}";do
+#     echo "processing " $i
+#  done

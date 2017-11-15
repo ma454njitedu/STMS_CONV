@@ -1,0 +1,51 @@
+all scripts and programs are located in /home/conversion/ and Programs have more detailed information inside as comments,
+,,
+Execution Key,  ./prog_name.sh -c -d 20170517,
+ -c,  core,[] = 1 or more
+ -n,  noncore,() = optional
+ -t,  target,{} = 1 and only 1
+ -s,  source,
+ -d YYYYMMDD,  date,
+ -f file_name.INP,  filename,
+ -m <mock>,  mock,
+ -v <number>,  number,
+ -p <search param>,search parameter    defaults to *.INP,
+,,
+TOOLS:,,
+1. removeM.sh,will remove dos characters based on file selection,no arguments. Must modify script
+2. convert_rms.pl,will convert unformated RMS files to a || format,
+3. rename.sh,will rename files based on file selection and how it is to be modified,"no arguments: modify 2 places, ls command and sed command"
+4. get_counts.sh   ,count files and compare them to the highest sequence number by file key,no arguments
+5. find_accts.pl,identifies accounts in all datafiles ,[ -c -n -s ] -f -a
+6. find_accts_data.sh,identifies accounts with data in all datafiles ,no arg (defaults to lastest file in output dir / file_name (defaults to output dir)/ fully qualified file_name 
+,,
+MINOR:,,
+7. validate_acct_files.sh,validates the account files are 9 digits and no blanks or dups,-m R1M3
+8. validate_filenames.sh,validates the naming convention on data files,[-c -n -s -t] -m R1M3
+9. validate_exclusions.sh,validates all files in exclusion and fallout files are not represented in data files,[-c -n -t] -m R1M3
+10. validate_mstr_accts.sh,identifies Master accounts that are not in all datafiles,[-c -n -s -t] -m R1M3 
+11. validate_INVC_0160_dates.sh,verifies trx_date falls between a 90 day range,[-c -s] -d yyyymmdd
+12. validate_network_data.sh,,[ -t -s ]
+13. reconciliate_src_tgt_excl,Validates source_accts - excl_accts = target_accts
+,,
+,,
+MAIN:,,
+14. sanity_check.sh,checks header vs. files for: file counts row; counts; seq compare & continuity; dups ,[-c -n -s -t]
+15. validate_columns_bySeq.sh,runs validate_columns.pl & validate_etracs.pl for all files by sequence number,"[-c -n -s -t]  (-v <integer>) (-i <iterations>) (-E) defaults (1,1,non ETRACS)"
+16. validate_columns_byName.sh,runs validation_columns.pl for all files specified by name,[-c -n -s -t] (-p <search_parameter>)            without -p the param defaults to *.INP
+17. vlaidate_columns.pl,validates column by column based on the maps - non ETRACS only,1 argument(full file name w/o path):
+18. validate_etracs.pl,validates column by column based on the maps - ETRACS only,1 argument(full file name w/o path):
+,,
+,,
+,,
+UTILITIES:,,
+date.sh         ,1 argument (YYYYMMDD): Will validate a date,
+diff.pl         ,2 arguments (2 file names): Special modified diff for find_mstr_acct.sh,
+spcl_diff.pl    ,2 arguments (2 file names): Special modified diff for find_mstr_acct.sh,
+,,
+combine_files.sh,used to combine all like logfiles by key into one file by key.,link located in ./data/ouptut: 
+erase_logs.sh   ,used to eliminate large log files while job that is producing them is running.,link located in ./data/logs:
+,,
+INCL files:,,
+getopts.incl,used to give options to running programs,
+use_color.incl,used to colorize stdout,
